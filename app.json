@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Poker Trainer",
+    "slug": "poker-trainer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#050814"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ishaan09.pokertrainer",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {},
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2b6eb311-0bb1-40bc-861e-e918fc44a17a"
+      }
+    },
+    "owner": "ishaan-09"
+  }
+}
