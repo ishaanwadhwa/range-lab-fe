@@ -1,3 +1,8 @@
+/**
+ * SpotsScreen - Spot Library
+ * "Dark Confidence" design
+ */
+
 import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { colors } from "../theme/colors";
@@ -7,7 +12,8 @@ interface SpotPack {
   title: string;
   subtitle: string;
   count: number;
-  emoji: string;
+  icon: string;
+  difficulty: "easy" | "medium" | "hard";
 }
 
 const MOCK_PACKS: SpotPack[] = [
@@ -16,45 +22,77 @@ const MOCK_PACKS: SpotPack[] = [
     title: "BTN vs BB",
     subtitle: "Turn SRP",
     count: 24,
-    emoji: "🎯"
+    icon: "♠",
+    difficulty: "medium",
   },
   {
     id: "co_bb_river",
     title: "CO vs BB",
     subtitle: "River spots",
     count: 18,
-    emoji: "🌊"
+    icon: "♥",
+    difficulty: "hard",
   },
   {
     id: "3bet_pots",
     title: "3-Bet Pots",
     subtitle: "IP as PFR",
     count: 32,
-    emoji: "🔥"
+    icon: "♦",
+    difficulty: "hard",
+  },
+  {
+    id: "bb_defense",
+    title: "BB Defense",
+    subtitle: "vs BTN open",
+    count: 28,
+    icon: "♣",
+    difficulty: "medium",
   },
   {
     id: "squeeze_spots",
     title: "Squeeze Pots",
-    subtitle: "Advanced",
+    subtitle: "Multiway",
     count: 12,
-    emoji: "💎"
-  }
+    icon: "♠",
+    difficulty: "hard",
+  },
 ];
 
-export const SpotsScreen: React.FC = () => {
-  const handlePackPress = (pack: SpotPack) => {
-    console.log("Selected pack:", pack.id);
-    // TODO: Navigate to drill with this pack
-  };
+const getDifficultyColor = (diff: SpotPack["difficulty"]) => {
+  switch (diff) {
+    case "easy": return colors.green;
+    case "medium": return colors.gold;
+    case "hard": return colors.red;
+  }
+};
 
+export const SpotsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Spot Library</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text style={styles.headerLabel}>LIBRARY</Text>
+        <Text style={styles.headerTitle}>Spot Packs</Text>
+        <Text style={styles.headerDesc}>
           Choose what you want to train
         </Text>
+      </View>
+
+      {/* Filter chips */}
+      <View style={styles.filters}>
+        <Pressable style={[styles.filterChip, styles.filterChipActive]}>
+          <Text style={[styles.filterText, styles.filterTextActive]}>All</Text>
+        </Pressable>
+        <Pressable style={styles.filterChip}>
+          <Text style={styles.filterText}>IP</Text>
+        </Pressable>
+        <Pressable style={styles.filterChip}>
+          <Text style={styles.filterText}>OOP</Text>
+        </Pressable>
+        <Pressable style={styles.filterChip}>
+          <Text style={styles.filterText}>3-Bet</Text>
+        </Pressable>
       </View>
 
       {/* Pack list */}
@@ -66,28 +104,33 @@ export const SpotsScreen: React.FC = () => {
         {MOCK_PACKS.map((pack) => (
           <Pressable
             key={pack.id}
-            onPress={() => handlePackPress(pack)}
             style={({ pressed }) => [
               styles.packCard,
-              pressed && styles.packCardPressed
+              pressed && styles.packCardPressed,
             ]}
           >
-            <View style={styles.packEmoji}>
-              <Text style={styles.packEmojiText}>{pack.emoji}</Text>
+            {/* Icon */}
+            <View style={styles.packIcon}>
+              <Text style={styles.packIconText}>{pack.icon}</Text>
             </View>
-            <View style={styles.packInfo}>
+            
+            {/* Content */}
+            <View style={styles.packContent}>
               <Text style={styles.packTitle}>{pack.title}</Text>
               <Text style={styles.packSubtitle}>{pack.subtitle}</Text>
             </View>
-            <View style={styles.packCount}>
-              <Text style={styles.packCountText}>{pack.count}</Text>
-              <Text style={styles.packCountLabel}>spots</Text>
+            
+            {/* Meta */}
+            <View style={styles.packMeta}>
+              <View style={[styles.diffDot, { backgroundColor: getDifficultyColor(pack.difficulty) }]} />
+              <Text style={styles.packCount}>{pack.count}</Text>
             </View>
           </Pressable>
         ))}
 
         {/* Coming soon hint */}
         <View style={styles.comingSoon}>
+          <Text style={styles.suitDecor}>♠ ♥ ♦ ♣</Text>
           <Text style={styles.comingSoonText}>More packs coming soon</Text>
         </View>
       </ScrollView>
@@ -98,93 +141,141 @@ export const SpotsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.bg,
   },
+  
+  // Header
   header: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 24
+    paddingBottom: 20,
+  },
+  headerLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.gold,
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: "700",
-    color: "#ffffff",
-    marginBottom: 4
+    fontWeight: "900",
+    color: colors.textPrimary,
+    letterSpacing: -0.5,
   },
-  headerSubtitle: {
-    fontSize: 15,
-    color: "#9CA3AF",
-    fontWeight: "400"
+  headerDesc: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
   },
+  
+  // Filters
+  filters: {
+    flexDirection: "row",
+    paddingHorizontal: 24,
+    gap: 10,
+    marginBottom: 20,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterChipActive: {
+    backgroundColor: colors.goldDim,
+    borderColor: colors.gold,
+  },
+  filterText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary,
+  },
+  filterTextActive: {
+    color: colors.gold,
+  },
+  
+  // Scroll
   scrollView: {
-    flex: 1
+    flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 32
+    paddingHorizontal: 24,
+    paddingBottom: 120,
   },
+  
+  // Pack card
   packCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#111827",
+    backgroundColor: colors.surface,
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#1F2937"
+    borderColor: colors.border,
+    gap: 14,
   },
   packCardPressed: {
-    backgroundColor: "#1F2937",
-    transform: [{ scale: 0.98 }]
+    backgroundColor: colors.surfaceLight,
+    transform: [{ scale: 0.99 }],
   },
-  packEmoji: {
+  packIcon: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: "#1F2937",
+    backgroundColor: colors.goldDim,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14
   },
-  packEmojiText: {
-    fontSize: 22
+  packIconText: {
+    fontSize: 22,
+    color: colors.gold,
   },
-  packInfo: {
-    flex: 1
+  packContent: {
+    flex: 1,
   },
   packTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#ffffff",
-    marginBottom: 2
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textPrimary,
   },
   packSubtitle: {
-    fontSize: 14,
-    color: "#6B7280"
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  packMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  diffDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   packCount: {
-    alignItems: "center",
-    paddingLeft: 12
+    fontSize: 20,
+    fontWeight: "900",
+    color: colors.textSecondary,
   },
-  packCountText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#3B82F6"
-  },
-  packCountLabel: {
-    fontSize: 11,
-    color: "#6B7280",
-    textTransform: "uppercase",
-    letterSpacing: 0.5
-  },
+  
+  // Coming soon
   comingSoon: {
     alignItems: "center",
-    paddingVertical: 24
+    paddingVertical: 32,
+  },
+  suitDecor: {
+    fontSize: 18,
+    color: colors.border,
+    letterSpacing: 12,
+    marginBottom: 12,
   },
   comingSoonText: {
     fontSize: 13,
-    color: "#4B5563",
-    fontStyle: "italic"
-  }
+    color: colors.textMuted,
+  },
 });
-

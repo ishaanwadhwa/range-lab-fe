@@ -1,5 +1,10 @@
+/**
+ * RootNavigator - Main app navigation
+ * "Dark Confidence" design
+ */
+
 import React from "react";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { BlurView } from "expo-blur";
@@ -31,7 +36,8 @@ const TrainStackNavigator: React.FC = () => {
     <TrainStack.Navigator
       initialRouteName="Home"
       screenOptions={{
-        headerShown: false
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bg },
       }}
     >
       <TrainStack.Screen name="Home" component={HomeScreen} />
@@ -54,18 +60,20 @@ export const RootNavigator: React.FC = () => {
             color={color}
           />
         ),
-        tabBarActiveTintColor: "#ffffff",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarStyle: styles.tabBar,
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
             <BlurView
-              intensity={80}
+              intensity={60}
               tint="dark"
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, styles.blurBg]}
             />
-          ) : null
+          ) : (
+            <View style={[StyleSheet.absoluteFill, styles.androidBg]} />
+          ),
       })}
     >
       <Tab.Screen
@@ -90,17 +98,27 @@ export const RootNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",
-    backgroundColor:
-      Platform.OS === "ios" ? "transparent" : "rgba(5, 8, 20, 0.95)",
+    backgroundColor: "transparent",
     borderTopWidth: 0,
+    borderTopColor: colors.border,
     elevation: 0,
     height: 88,
     paddingTop: 8,
-    paddingBottom: Platform.OS === "ios" ? 28 : 12
+    paddingBottom: Platform.OS === "ios" ? 28 : 12,
+  },
+  blurBg: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  androidBg: {
+    backgroundColor: "rgba(8, 9, 13, 0.98)",
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   tabBarLabel: {
     fontSize: 11,
-    fontWeight: "600",
-    marginTop: 4
-  }
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    marginTop: 4,
+  },
 });

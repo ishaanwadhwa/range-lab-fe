@@ -5,11 +5,12 @@ import { Seat, PositionLabel } from "./Seat";
 import { AnimatedBoardCards } from "./AnimatedBoardCards";
 import { HeroHand } from "./HeroHand";
 import { AnimatedPot } from "./AnimatedPot";
-import { BetChip } from "./BetChip";
+import { PlayerBetChips } from "./PlayerBetChips";
+import { BetChip, BetAction } from "./BetChip";
 import { DealerButton } from "./DealerButton";
 import { colors } from "../theme/colors";
 import { Position } from "../types/spot";
-import { getSeatSlot, SEAT_LAYOUTS, getChipStartOffset, SeatSlot } from "../utils/seatRotation";
+import { getSeatSlot, SEAT_LAYOUTS, CHIP_LAYOUTS, getChipStartOffset } from "../utils/seatRotation";
 
 export interface AnimatedPlayerData {
   id: string;
@@ -29,9 +30,12 @@ export interface AnimatedPokerTableProps {
   visibleBoardCards: number;
   pot: number;
   players: AnimatedPlayerData[];
+  dealerPosition?: Position;  // Who has the dealer button
   currentBet?: {
     position: Position;
-    amount: number;
+    exactAmount: number;
+    roundedAmount: number;  // For visual chip animation
+    action: string;
   } | null;
 }
 
@@ -42,26 +46,45 @@ export const AnimatedPokerTable: React.FC<AnimatedPokerTableProps> = ({
   visibleBoardCards,
   pot,
   players,
+  dealerPosition = "BTN",  // Default to BTN
   currentBet,
 }) => {
   const hero = players.find((p) => p.isHero);
   const villains = players.filter((p) => !p.isHero);
+  
+  // Is hero the dealer?
+  const heroIsDealer = heroPosition === dealerPosition;
 
-  // Chip animation state
+  // Chip animation state for sliding to pot
   const [chipVisible, setChipVisible] = useState(false);
   const [chipStart, setChipStart] = useState({ x: 0, y: 0 });
   const [chipAmount, setChipAmount] = useState(0);
+  const [chipAction, setChipAction] = useState<BetAction>("b");
+  const [chipKey, setChipKey] = useState(0); // Unique key to force re-render
 
-  // Trigger chip animation when bet changes
+  // Trigger chip slide animation when bet changes
+  // Uses roundedAmount for visual display per UPDATED_CONTEXT.MD
   useEffect(() => {
-    if (currentBet && currentBet.amount > 0) {
-      const slot = getSeatSlot(currentBet.position, heroPosition);
-      const offset = getChipStartOffset(slot);
-      setChipStart(offset);
-      setChipAmount(currentBet.amount);
-      setChipVisible(true);
+    if (currentBet && currentBet.roundedAmount > 0) {
+      // First hide any existing chip
+      setChipVisible(false);
+      
+      // Use timeout to ensure state reset before showing new chip
+      const timer = setTimeout(() => {
+        const slot = getSeatSlot(currentBet.position, heroPosition);
+        const offset = getChipStartOffset(slot);
+        setChipStart(offset);
+        setChipAmount(currentBet.roundedAmount);  // Use rounded for visual
+        setChipAction((currentBet.action as BetAction) || "b");
+        setChipKey(prev => prev + 1); // Increment key to force re-mount
+        setChipVisible(true);
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setChipVisible(false);
     }
-  }, [currentBet, heroPosition]);
+  }, [currentBet?.position, currentBet?.roundedAmount, currentBet?.action, heroPosition]);
 
   const handleChipAnimationComplete = () => {
     setChipVisible(false);
@@ -87,9 +110,11 @@ export const AnimatedPokerTable: React.FC<AnimatedPokerTableProps> = ({
             <View style={styles.potArea}>
               <AnimatedPot amount={pot} />
               
-              {/* Chip animation - positioned relative to pot */}
+              {/* Chip sliding animation - positioned relative to pot */}
               <BetChip
+                key={`bet-chip-${chipKey}`}
                 amount={chipAmount}
+                action={chipAction}
                 startX={chipStart.x}
                 startY={chipStart.y}
                 visible={chipVisible}
@@ -102,29 +127,58 @@ export const AnimatedPokerTable: React.FC<AnimatedPokerTableProps> = ({
         {/* Villain seats - rotated based on hero position */}
         {villains.map((player) => {
           const slot = getSeatSlot(player.position, heroPosition);
-          const layout = SEAT_LAYOUTS[slot];
+          const seatLayout = SEAT_LAYOUTS[slot];
+          const chipLayout = CHIP_LAYOUTS[slot];
+          const hasBet = player.lastBetAmount && player.lastBetAmount > 0;
+          const isDealer = player.position === dealerPosition;
 
           return (
-            <View
-              key={player.id}
-              style={[
-                styles.seatSlot,
-                {
-                  top: layout.top,
-                  left: layout.left,
-                  transform: [{ translateX: -35 }, { translateY: -30 }],
-                },
-              ]}
-            >
-              <Seat
-                name={player.position} // Show position as name
-                stack={`${player.stack.toFixed(0)}BB`}
-                position={player.position as PositionLabel}
-                lastAction={player.lastAction}
-                isFolded={player.isFolded}
-                isActive={!player.isFolded}
-              />
-            </View>
+            <React.Fragment key={player.id}>
+              {/* Seat */}
+              <View
+                style={[
+                  styles.seatSlot,
+                  {
+                    top: seatLayout.top,
+                    left: seatLayout.left,
+                    transform: [{ translateX: -35 }, { translateY: -30 }],
+                  },
+                ]}
+              >
+                <Seat
+                  name={player.position}
+                  stack={`${player.stack.toFixed(0)}BB`}
+                  position={player.position as PositionLabel}
+                  lastAction={player.lastAction}
+                  lastBetAmount={player.lastBetAmount}
+                  isFolded={player.isFolded}
+                  isActive={!player.isFolded}
+                />
+                {/* Dealer button on villain */}
+                {isDealer && (
+                  <DealerButton style={styles.villainDealerBtn} />
+                )}
+              </View>
+
+              {/* Bet chips in front of player */}
+              {hasBet && (
+                <View
+                  style={[
+                    styles.chipSlot,
+                    {
+                      top: chipLayout.top,
+                      left: chipLayout.left,
+                      transform: [{ translateX: -20 }, { translateY: -10 }],
+                    },
+                  ]}
+                >
+                  <PlayerBetChips
+                    amount={player.lastBetAmount || 0}
+                    visible={true}
+                  />
+                </View>
+              )}
+            </React.Fragment>
           );
         })}
 
@@ -138,7 +192,8 @@ export const AnimatedPokerTable: React.FC<AnimatedPokerTableProps> = ({
             <Text style={styles.heroName}>{hero?.name || "Hero"}</Text>
             <Text style={styles.heroStack}>{hero?.stack.toFixed(0) || "100"}BB</Text>
           </View>
-          <DealerButton style={styles.dealerBtn} />
+          {/* Only show dealer button if hero is BTN */}
+          {heroIsDealer && <DealerButton style={styles.dealerBtn} />}
         </View>
       </View>
     </View>
@@ -188,6 +243,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     zIndex: 10,
   },
+  chipSlot: {
+    position: "absolute",
+    zIndex: 15,
+  },
   heroArea: {
     position: "absolute",
     bottom: "10%",
@@ -226,5 +285,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -10,
     right: "30%",
+  },
+  villainDealerBtn: {
+    position: "absolute",
+    top: -8,
+    right: -8,
   },
 });

@@ -1,45 +1,65 @@
+/**
+ * RangeLab Color Palette - "Dark Confidence"
+ * 
+ * A premium dark theme with gold accents
+ * Inspired by high-stakes poker aesthetics
+ */
+
 export const colors = {
-  // App background
-  background: "#0D0D0D",
+  // Backgrounds
+  bg: "#08090D",
+  bgElevated: "#0E1015",
+  surface: "#12141A",
+  surfaceLight: "#1A1D26",
+  surfaceHover: "#1E2129",
   
-  // Table colors (PokerBaazi purple style)
-  tableRail: "#1A1A1A",
-  tableRailBorder: "#2D2D2D",
-  tableFeltStart: "#4B2D7F",
-  tableFeltEnd: "#2D1B4E",
+  // Borders
+  border: "#2A2D38",
+  borderLight: "#363942",
   
-  // Accent colors
-  accentBlue: "#3B82F6",
-  accentOrange: "#F97316",
-  accentYellow: "#FBBF24",
-  accentGreen: "#10B981",
-  accentRed: "#EF4444",
+  // Primary accent - Gold
+  gold: "#D4A84B",
+  goldDim: "rgba(212, 168, 75, 0.15)",
+  goldBright: "#E8C06A",
   
-  // Card colors
-  cardRed: "#DC2626",
-  cardBlack: "#1F2937",
-  cardBackground: "#FFFFFF",
+  // Secondary accents
+  blue: "#4A90D9",
+  blueDim: "rgba(74, 144, 217, 0.15)",
   
-  // Action bar colors (muted dark style)
-  actionBackground: "#1F1F1F",
-  actionBorder: "#333333",
-  actionFold: "#374151",
-  actionCall: "#374151",
-  actionRaise: "#374151",
+  // Semantic colors
+  green: "#4ADE80",
+  greenDim: "rgba(74, 222, 128, 0.15)",
+  red: "#F87171",
+  redDim: "rgba(248, 113, 113, 0.15)",
   
-  // Status colors
-  statusFold: "#EF4444",
-  statusCall: "#10B981",
-  statusRaise: "#F59E0B",
-  statusCheck: "#6B7280",
-  
-  // Text colors
+  // Text hierarchy
   textPrimary: "#FFFFFF",
-  textSecondary: "#9CA3AF",
+  textSecondary: "#A1A1AA",
   textMuted: "#6B7280",
+  textDim: "#4B5563",
   
-  // Dealer button
-  dealerButton: "#DC2626",
+  // Poker table (unchanged for game UI)
+  tableRail: "#1A1D26",
+  tableRailBorder: "#2A2D38",
+  tableFeltStart: "#4B2D7F",
+  tableFeltEnd: "#3D2069",
+  
+  // Cards
+  cardBackground: "#FFFFFF",
+  cardText: "#111827",
+  suitRed: "#EF4444",
+  suitBlack: "#111827",
+  
+  // Legacy mappings (for compatibility)
+  background: "#08090D",
+  accentBlue: "#4A90D9",
+  accentYellow: "#D4A84B",
+  accentGreen: "#4ADE80",
+  accentRed: "#F87171",
+  accentOrange: "#F59E0B",
+  actionFold: "#F87171",
+  actionCall: "#4ADE80",
+  actionAllIn: "#D4A84B",
 } as const;
 
-export type AppColorKey = keyof typeof colors;
+export type ColorKey = keyof typeof colors;

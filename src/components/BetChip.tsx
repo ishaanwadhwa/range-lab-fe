@@ -2,19 +2,31 @@ import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme/colors";
 
+export type BetAction = "r" | "b" | "c" | "a"; // raise, bet, call, all-in
+
 interface BetChipProps {
   amount: number;
+  action?: BetAction;
   startX: number;
   startY: number;
   visible: boolean;
   onAnimationComplete?: () => void;
 }
 
+const ACTION_LABELS: Record<BetAction, string> = {
+  r: "RAISE",
+  b: "BET",
+  c: "CALL",
+  a: "ALL-IN",
+};
+
 /**
  * Animated chip that appears at a position and slides to pot center
+ * Shows action type (RAISE/BET/CALL) with amount
  */
 export const BetChip: React.FC<BetChipProps> = ({
   amount,
+  action = "b",
   startX,
   startY,
   visible,
@@ -48,8 +60,8 @@ export const BetChip: React.FC<BetChipProps> = ({
             useNativeDriver: true,
           }),
         ]),
-        // Pause briefly
-        Animated.delay(200),
+        // Pause briefly so user can see the action
+        Animated.delay(350),
         // Slide to pot center
         Animated.parallel([
           Animated.timing(translateX, {
@@ -82,6 +94,8 @@ export const BetChip: React.FC<BetChipProps> = ({
 
   if (!visible || amount <= 0) return null;
 
+  const actionLabel = ACTION_LABELS[action] || "BET";
+
   return (
     <Animated.View
       style={[
@@ -97,6 +111,7 @@ export const BetChip: React.FC<BetChipProps> = ({
       ]}
     >
       <View style={styles.chip}>
+        <Text style={styles.actionText}>{actionLabel}</Text>
         <Text style={styles.amount}>{amount.toFixed(1)}</Text>
       </View>
     </Animated.View>
@@ -109,10 +124,13 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: colors.accentYellow,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: "#FFF",
     shadowColor: "#000",
@@ -121,10 +139,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  actionText: {
+    color: "#000",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
   amount: {
     color: "#000",
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
   },
 });
-

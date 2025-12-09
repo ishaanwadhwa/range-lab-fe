@@ -22,12 +22,34 @@ export const AnimatedBoardCards: React.FC<AnimatedBoardCardsProps> = ({
   ]).current;
 
   const [revealedCount, setRevealedCount] = useState(0);
-
+  
+  // Track the cards array to detect when a new spot loads
+  const prevCardsRef = useRef<string[]>([]);
+  
+  // Reset everything when cards array changes (new spot loaded)
   useEffect(() => {
-    // Animate cards based on visibleCount
+    const cardsKey = cards.join(",");
+    const prevKey = prevCardsRef.current.join(",");
+    
+    if (cardsKey !== prevKey) {
+      // New spot - reset all animations
+      cardAnims.forEach((anim) => {
+        anim.stopAnimation();
+        anim.setValue(0);
+      });
+      setRevealedCount(0);
+      prevCardsRef.current = cards;
+    }
+  }, [cards, cardAnims]);
+
+  // Animate cards based on visibleCount
+  useEffect(() => {
     if (visibleCount === 0) {
-      // Reset all
-      cardAnims.forEach((anim) => anim.setValue(0));
+      // Reset all animations
+      cardAnims.forEach((anim) => {
+        anim.stopAnimation();
+        anim.setValue(0);
+      });
       setRevealedCount(0);
     } else if (visibleCount === 3 && revealedCount < 3) {
       // Flop - animate cards 0, 1, 2 with stagger
@@ -43,7 +65,10 @@ export const AnimatedBoardCards: React.FC<AnimatedBoardCardsProps> = ({
       // River - animate card 4
       Animated.spring(cardAnims[4], { toValue: 1, friction: 8, useNativeDriver: true }).start(() => setRevealedCount(5));
     }
-  }, [visibleCount, revealedCount]);
+  }, [visibleCount, revealedCount, cardAnims]);
+
+  // Generate a stable key based on the entire board
+  const boardKey = cards.slice(0, 5).join("-") || "empty";
 
   return (
     <View style={styles.container}>
@@ -52,8 +77,9 @@ export const AnimatedBoardCards: React.FC<AnimatedBoardCardsProps> = ({
         const anim = cardAnims[idx];
         const shouldShow = idx < visibleCount && card;
 
+        // If no card for this slot, render empty placeholder
         if (!card) {
-          return <View key={idx} style={styles.emptySlot} />;
+          return <View key={`${boardKey}-empty-${idx}`} style={styles.emptySlot} />;
         }
 
         const scale = anim.interpolate({
@@ -68,7 +94,7 @@ export const AnimatedBoardCards: React.FC<AnimatedBoardCardsProps> = ({
 
         return (
           <Animated.View
-            key={`${card}-${idx}`}
+            key={`${boardKey}-${idx}`}
             style={[
               styles.cardWrapper,
               {

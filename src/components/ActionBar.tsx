@@ -1,3 +1,8 @@
+/**
+ * ActionBar - Decision buttons
+ * "Dark Confidence" design
+ */
+
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { colors } from "../theme/colors";
@@ -9,19 +14,27 @@ export type ActionConfig = {
   variant?: "default" | "highlight" | "danger";
 };
 
-// Variant colors
 const VARIANT_STYLES = {
   default: {
-    bg: "#1A1A1A",
-    border: "#333",
+    bg: colors.surface,
+    border: colors.border,
+    text: colors.textPrimary,
+    sub: colors.textMuted,
+    check: colors.textMuted,
   },
   highlight: {
-    bg: "#10B981", // Green for correct
-    border: "#10B981",
+    bg: colors.greenDim,
+    border: colors.green,
+    text: colors.green,
+    sub: colors.green,
+    check: colors.green,
   },
   danger: {
-    bg: "#EF4444", // Red for wrong selection
-    border: "#EF4444",
+    bg: colors.redDim,
+    border: colors.red,
+    text: colors.red,
+    sub: colors.red,
+    check: colors.red,
   },
 };
 
@@ -48,9 +61,8 @@ export const ActionBar: React.FC<ActionBarProps> = ({
     <View style={styles.container}>
       {actions.map((action) => {
         const variant = action.variant || "default";
-        const variantStyle = VARIANT_STYLES[variant];
-        const isHighlight = variant === "highlight";
-        const isDanger = variant === "danger";
+        const v = VARIANT_STYLES[variant];
+        const isActive = variant !== "default";
 
         return (
           <Pressable
@@ -58,18 +70,18 @@ export const ActionBar: React.FC<ActionBarProps> = ({
             onPress={() => isReady && onSelectAction?.(action.id)}
             style={({ pressed }) => [
               styles.button,
-              { backgroundColor: variantStyle.bg, borderColor: variantStyle.border },
+              { backgroundColor: v.bg, borderColor: v.border },
               !isReady && styles.buttonDisabled,
               pressed && isReady && styles.buttonPressed,
             ]}
           >
-            <Text style={[styles.checkmark, (isHighlight || isDanger) && { color: "#fff" }]}>✓</Text>
+            {isActive && <Text style={[styles.checkmark, { color: v.check }]}>✓</Text>}
             <View style={styles.labelWrap}>
-              <Text style={[styles.label, (isHighlight || isDanger) && styles.labelHighlight]}>
+              <Text style={[styles.label, { color: v.text }]}>
                 {action.label}
               </Text>
               {action.subLabel && (
-                <Text style={[styles.subLabel, (isHighlight || isDanger) && styles.subLabelHighlight]}>
+                <Text style={[styles.subLabel, { color: v.sub }]}>
                   {action.subLabel}
                 </Text>
               )}
@@ -88,49 +100,39 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 100, // Space for tab bar
     gap: 8,
+    backgroundColor: colors.bg,
   },
   button: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#1A1A1A",
+    paddingVertical: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#333",
-    gap: 4,
-  },
-  buttonHighlight: {
-    backgroundColor: colors.accentGreen,
-    borderColor: colors.accentGreen,
+    gap: 6,
   },
   buttonDisabled: {
     opacity: 0.4,
   },
   buttonPressed: {
     opacity: 0.7,
+    transform: [{ scale: 0.98 }],
   },
   checkmark: {
     fontSize: 12,
-    color: "#666",
+    fontWeight: "700",
   },
   labelWrap: {
     alignItems: "center",
   },
   label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  labelHighlight: {
-    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
   subLabel: {
-    fontSize: 10,
-    color: "#888",
-  },
-  subLabelHighlight: {
-    color: "rgba(255,255,255,0.8)",
+    fontSize: 11,
+    marginTop: 2,
   },
 });

@@ -1,9 +1,15 @@
+/**
+ * HomeScreen - Training Hub
+ * "Dark Confidence" design
+ */
+
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { TrainStackParamList } from "../navigation/RootNavigator";
 import { colors } from "../theme/colors";
+import { resetOnboarding } from "../storage";
 
 type Props = NativeStackScreenProps<TrainStackParamList, "Home">;
 
@@ -12,68 +18,98 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate("AnimatedDrill");
   };
 
+  // DEV ONLY: Reset onboarding
+  const handleDevReset = async () => {
+    await resetOnboarding();
+    Alert.alert("Reset", "Restart app to see onboarding");
+  };
+
   return (
     <View style={styles.container}>
-      {/* Hero section */}
-      <View style={styles.hero}>
-        {/* Logo / brand */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoEmoji}>♠️</Text>
-          <Text style={styles.logoText}>RangeLab</Text>
+      {/* Decorative background gradient */}
+      <LinearGradient
+        colors={["rgba(212, 168, 75, 0.05)", "transparent", "transparent"]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 0.5 }}
+      />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>WELCOME BACK</Text>
+          <Text style={styles.brandName}>RangeLab</Text>
         </View>
+        <View style={styles.streak}>
+          <Text style={styles.streakNumber}>4</Text>
+          <Text style={styles.streakLabel}>day streak</Text>
+        </View>
+      </View>
 
-        {/* Tagline */}
-        <Text style={styles.tagline}>Train your poker decisions</Text>
-
-        {/* Quick stats row */}
-        <View style={styles.quickStats}>
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>4</Text>
-            <Text style={styles.statLabel}>day streak</Text>
+      {/* Main content */}
+      <View style={styles.content}>
+        {/* Stats card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>73%</Text>
+            <Text style={styles.statLabel}>Accuracy</Text>
           </View>
           <View style={styles.statDivider} />
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>73%</Text>
-            <Text style={styles.statLabel}>accuracy</Text>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>142</Text>
+            <Text style={styles.statLabel}>Spots done</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>+2.1</Text>
+            <Text style={styles.statLabel}>EV saved</Text>
           </View>
         </View>
+
+        {/* Today's focus */}
+        <View style={styles.focusSection}>
+          <Text style={styles.sectionLabel}>TODAY'S FOCUS</Text>
+          <View style={styles.focusCard}>
+            <View style={styles.focusIcon}>
+              <Text style={styles.focusIconText}>🎯</Text>
+            </View>
+            <View style={styles.focusContent}>
+              <Text style={styles.focusTitle}>Turn Decisions</Text>
+              <Text style={styles.focusDesc}>6-max · 100bb · IP as PFR</Text>
+            </View>
+            <Text style={styles.focusCount}>24</Text>
+          </View>
+        </View>
+
+        {/* Suit decorations */}
+        <Text style={styles.suitDecor}>♠ ♥ ♦ ♣</Text>
       </View>
 
-      {/* Main CTA */}
-      <View style={styles.ctaContainer}>
+      {/* CTA */}
+      <View style={styles.ctaSection}>
         <Pressable
+          style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]}
           onPress={handleStartDrill}
-          style={({ pressed }) => [
-            styles.ctaButton,
-            pressed && styles.ctaButtonPressed
-          ]}
         >
           <LinearGradient
-            colors={["#3B82F6", "#2563EB"]}
+            colors={[colors.gold, "#B8860B"]}
+            style={styles.ctaGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.ctaGradient}
           >
-            <Text style={styles.ctaIcon}>▶︎</Text>
-            <Text style={styles.ctaText}>Start Training</Text>
+            <Text style={styles.ctaText}>START TRAINING</Text>
           </LinearGradient>
         </Pressable>
-
-        {/* Session info */}
-        <Text style={styles.sessionHint}>
-          Turn spots · 6-max · 100bb
-        </Text>
+        
+        <Text style={styles.ctaHint}>~10 min session · 15 spots</Text>
       </View>
 
-      {/* Bottom decorative element */}
-      <View style={styles.bottomDecor}>
-        <View style={styles.decorCard}>
-          <Text style={styles.decorCardText}>A♠</Text>
-        </View>
-        <View style={[styles.decorCard, styles.decorCard2]}>
-          <Text style={styles.decorCardText}>K♥</Text>
-        </View>
-      </View>
+      {/* DEV Reset button */}
+      {__DEV__ && (
+        <Pressable onPress={handleDevReset} style={styles.devReset}>
+          <Text style={styles.devResetText}>↻ Reset Onboarding</Text>
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -81,127 +117,195 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 24
+    backgroundColor: colors.bg,
   },
-  hero: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 40
-  },
-  logoContainer: {
+  
+  // Header
+  header: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8
-  },
-  logoEmoji: {
-    fontSize: 36,
-    marginRight: 12
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: "#ffffff",
-    letterSpacing: -1
-  },
-  tagline: {
-    fontSize: 17,
-    color: "#6B7280",
-    marginBottom: 32
-  },
-  quickStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 16,
-    paddingVertical: 12,
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     paddingHorizontal: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)"
+    paddingTop: 16,
+    paddingBottom: 32,
   },
-  statPill: {
+  greeting: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+    letterSpacing: 2,
+  },
+  brandName: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: colors.textPrimary,
+    letterSpacing: -0.5,
+  },
+  streak: {
     alignItems: "center",
-    paddingHorizontal: 16
+    backgroundColor: colors.goldDim,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  streakNumber: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: colors.gold,
+  },
+  streakLabel: {
+    fontSize: 10,
+    color: colors.gold,
+    letterSpacing: 0.5,
+  },
+  
+  // Content
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  
+  // Stats card
+  statsCard: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
   },
   statValue: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#ffffff"
+    fontSize: 28,
+    fontWeight: "900",
+    color: colors.textPrimary,
   },
   statLabel: {
     fontSize: 12,
-    color: "#6B7280",
-    marginTop: 2
+    color: colors.textMuted,
+    marginTop: 4,
   },
   statDivider: {
     width: 1,
-    height: 32,
-    backgroundColor: "rgba(255,255,255,0.1)"
+    backgroundColor: colors.border,
+    marginHorizontal: 8,
   },
-  ctaContainer: {
-    alignItems: "center",
-    paddingBottom: 120
+  
+  // Focus section
+  focusSection: {
+    marginTop: 32,
   },
-  ctaButton: {
-    borderRadius: 28,
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.gold,
+    letterSpacing: 2,
+    marginBottom: 12,
   },
-  ctaButtonPressed: {
-    transform: [{ scale: 0.97 }],
-    shadowOpacity: 0.2
-  },
-  ctaGradient: {
+  focusCard: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    borderRadius: 28
-  },
-  ctaIcon: {
-    fontSize: 18,
-    color: "#ffffff",
-    marginRight: 10
-  },
-  ctaText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#ffffff",
-    letterSpacing: 0.3
-  },
-  sessionHint: {
-    fontSize: 13,
-    color: "#4B5563",
-    marginTop: 16
-  },
-  bottomDecor: {
-    position: "absolute",
-    bottom: 100,
-    right: 24,
-    flexDirection: "row"
-  },
-  decorCard: {
-    width: 44,
-    height: 60,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 18,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: colors.border,
+    gap: 14,
+  },
+  focusIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.goldDim,
     alignItems: "center",
     justifyContent: "center",
-    transform: [{ rotate: "8deg" }]
   },
-  decorCard2: {
-    marginLeft: -20,
-    transform: [{ rotate: "-4deg" }]
+  focusIconText: {
+    fontSize: 22,
   },
-  decorCardText: {
-    fontSize: 14,
+  focusContent: {
+    flex: 1,
+  },
+  focusTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  focusDesc: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  focusCount: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: colors.gold,
+  },
+  
+  // Decorations
+  suitDecor: {
+    textAlign: "center",
+    fontSize: 24,
+    color: colors.border,
+    letterSpacing: 16,
+    marginTop: 40,
+  },
+  
+  // CTA
+  ctaSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 120,
+  },
+  ctaButton: {
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: colors.gold,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  ctaPressed: {
+    transform: [{ scale: 0.98 }],
+    shadowOpacity: 0.2,
+  },
+  ctaGradient: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  ctaText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#000",
+    letterSpacing: 2,
+  },
+  ctaHint: {
+    textAlign: "center",
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 12,
+  },
+  
+  // Dev reset
+  devReset: {
+    position: "absolute",
+    bottom: 100,
+    left: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.redDim,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.red,
+  },
+  devResetText: {
+    color: colors.red,
+    fontSize: 11,
     fontWeight: "600",
-    color: "rgba(255,255,255,0.15)"
-  }
+  },
 });

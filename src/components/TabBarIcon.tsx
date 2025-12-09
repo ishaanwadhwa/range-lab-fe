@@ -1,5 +1,11 @@
+/**
+ * TabBarIcon - Navigation icons
+ * "Dark Confidence" design
+ */
+
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { colors } from "../theme/colors";
 
 export type TabIconName = "train" | "spots" | "stats";
 
@@ -9,19 +15,15 @@ interface TabBarIconProps {
   color: string;
 }
 
-/**
- * Simple, elegant tab icons inspired by SF Symbols.
- * Using unicode/emoji-based icons for now; can swap for SVG later.
- */
 export const TabBarIcon: React.FC<TabBarIconProps> = ({
   name,
   focused,
-  color
+  color,
 }) => {
   const iconMap: Record<TabIconName, string> = {
-    train: "▶︎", // play symbol
-    spots: "♠︎", // spade for poker
-    stats: "◉" // circle/chart
+    train: "▶",
+    spots: "♠",
+    stats: "◎",
   };
 
   return (
@@ -32,7 +34,7 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({
           styles.icon,
           { color },
           focused && styles.iconFocused,
-          name === "spots" && styles.iconSpade
+          name === "spots" && styles.iconSpade,
         ]}
       >
         {iconMap[name]}
@@ -45,25 +47,24 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 6
+    paddingTop: 6,
   },
   activeIndicator: {
     position: "absolute",
     top: 0,
-    width: 24,
+    width: 20,
     height: 3,
     borderRadius: 2,
-    backgroundColor: "#3B82F6" // blue-500
+    backgroundColor: colors.gold,
   },
   icon: {
     fontSize: 20,
-    fontWeight: "400"
+    fontWeight: "400",
   },
   iconFocused: {
-    fontWeight: "600"
+    fontWeight: "600",
   },
   iconSpade: {
-    fontSize: 22
-  }
+    fontSize: 22,
+  },
 });
-
