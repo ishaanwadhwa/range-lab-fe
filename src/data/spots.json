@@ -29,7 +29,19 @@
       "sol": {
         "b": 1,
         "ev": [-0.2, 1.1, 0.4]
-      }
+      },
+      "meta": {
+        "concept": ["thin value", "position advantage"],
+        "summary": "With top pair decent kicker on a brick turn, we have a clear value bet. BB's checking range is capped after calling flop, making our AJ strong enough to bet for value.",
+        "solverNotes": [
+          "AJ is in the top 20% of our range on this runout",
+          "BB's check-call range is mostly Kx and draws that missed",
+          "33% sizing allows us to get called by worse while keeping draws in",
+          "Checking risks giving a free card to hands with equity"
+        ],
+        "freq": [0.15, 0.65, 0.20]
+      },
+      "tags": ["value betting", "turn play", "IP"]
     },
     {
       "id": "s002",
@@ -66,7 +78,19 @@
       "sol": {
         "b": 0,
         "ev": [0, -2.1, -4.5]
-      }
+      },
+      "meta": {
+        "concept": ["missed draw", "showdown value", "pot control"],
+        "summary": "Our flush draw missed and we have just T-high. Checking back gives us the best chance to win at showdown against busted draws in villain's range.",
+        "solverNotes": [
+          "T9 has no showdown value against BB's calling range",
+          "Bluffing is -EV because villain reached river with mostly strong hands",
+          "Our hand blocks some of villain's folds (heart draws)",
+          "Checking preserves our equity and lets villain bluff sometimes"
+        ],
+        "freq": [0.95, 0.03, 0.02]
+      },
+      "tags": ["river play", "give up", "busted draw"]
     },
     {
       "id": "s003",
@@ -92,7 +116,19 @@
       "sol": {
         "b": 1,
         "ev": [0.5, 1.2, 0.8]
-      }
+      },
+      "meta": {
+        "concept": ["c-betting", "equity advantage", "nut advantage"],
+        "summary": "We have a strong combo draw with overcards and a gutshot plus flush draw. C-betting small builds the pot for when we hit while also having fold equity.",
+        "solverNotes": [
+          "KJcc has ~55% equity vs BB's continuing range",
+          "Small sizing allows us to c-bet wide on this coordinated board",
+          "We have 9 flush outs + 4 straight outs (some dirty)",
+          "33% sizing lets us bet frequently without overinvesting"
+        ],
+        "freq": [0.25, 0.60, 0.15]
+      },
+      "tags": ["c-bet", "flop play", "draw"]
     }
   ]
 }

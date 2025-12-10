@@ -13,6 +13,7 @@ import { SpotScreen } from "../screens/SpotScreen";
 import { SpotsScreen } from "../screens/SpotsScreen";
 import { StatsScreen } from "../screens/StatsScreen";
 import { AnimatedDrillScreen } from "../screens/AnimatedDrillScreen";
+import { ExplanationChatScreen, ExplanationChatParams } from "../screens/ExplanationChatScreen";
 import { TabBarIcon, TabIconName } from "../components/TabBarIcon";
 import { colors } from "../theme/colors";
 
@@ -20,6 +21,7 @@ export type TrainStackParamList = {
   Home: undefined;
   AnimatedDrill: undefined;
   Spot: undefined;
+  ExplanationChat: ExplanationChatParams;
 };
 
 export type RootTabParamList = {
@@ -43,6 +45,7 @@ const TrainStackNavigator: React.FC = () => {
       <TrainStack.Screen name="Home" component={HomeScreen} />
       <TrainStack.Screen name="AnimatedDrill" component={AnimatedDrillScreen} />
       <TrainStack.Screen name="Spot" component={SpotScreen} />
+      <TrainStack.Screen name="ExplanationChat" component={ExplanationChatScreen} />
     </TrainStack.Navigator>
   );
 };

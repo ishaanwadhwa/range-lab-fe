@@ -86,6 +86,16 @@ export interface SpotSolution {
 }
 
 /**
+ * Spot metadata for explanations
+ */
+export interface SpotMeta {
+  concept: string[];           // Concepts this spot teaches (e.g., ["value betting", "thin value"])
+  summary?: string;            // 1-2 sentence explanation
+  solverNotes?: string[];      // Key strategic points from solver
+  freq?: number[];             // Solver frequencies for each option
+}
+
+/**
  * Complete Spot JSON structure
  */
 export interface SpotData {
@@ -100,6 +110,8 @@ export interface SpotData {
   hist: HistoryAction[];
   opts: ActionOption[];
   sol: SpotSolution;
+  meta?: SpotMeta; // Explanation metadata
+  tags?: string[]; // Spot tags for categorization
 }
 
 /**
@@ -159,4 +171,7 @@ export interface ProcessedSpot {
   villainsInHand: Position[];
   options: ProcessedOption[];
   history: ProcessedHistoryAction[];
+  dealerPosition: Position;
+  meta?: SpotMeta;
+  tags?: string[];
 }

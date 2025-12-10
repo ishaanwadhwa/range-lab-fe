@@ -3,13 +3,15 @@
  * "Dark Confidence" design
  */
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { TrainStackParamList } from "../navigation/RootNavigator";
+import { BottomSheetRef } from "../components/BottomSheet";
 import { colors } from "../theme/colors";
 import { AnimatedPokerTable, AnimatedPlayerData } from "../components/AnimatedPokerTable";
 import { ActionBar, ActionConfig } from "../components/ActionBar";
+import { ExplanationSheet } from "../components/ExplanationSheet";
 import { parseSpot, formatCards, validateSpot } from "../utils/SpotParser";
 import { useTimeline } from "../utils/TimelineEngine";
 import { SpotData, ProcessedSpot, Position } from "../types/spot";
@@ -23,6 +25,9 @@ type Props = NativeStackScreenProps<TrainStackParamList, "AnimatedDrill">;
 // All 6-max positions
 const ALL_POSITIONS: Position[] = ["UTG", "MP", "CO", "BTN", "SB", "BB"];
 
+// Explanation state machine
+type ExplainState = "hidden" | "sheet" | "chat";
+
 export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
   // Spot loading state
   const [rawSpot, setRawSpot] = useState<SpotData | null>(null);
@@ -33,6 +38,10 @@ export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
   // Decision state
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+
+  // Explanation state
+  const [explainState, setExplainState] = useState<ExplainState>("hidden");
+  const bottomSheetRef = useRef<BottomSheetRef>(null);
 
   // Default filters
   const filters: SpotFilters = {
@@ -45,6 +54,7 @@ export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
     setError(null);
     setSelectedAction(null);
     setShowResult(false);
+    setExplainState("hidden");
 
     try {
       const spot = await fetchRandomSpot(filters);
@@ -157,9 +167,21 @@ export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
     }));
   }, [spot, selectedAction]);
 
+  // Get selected and correct action labels
+  const selectedActionLabel = useMemo(() => {
+    if (!spot || !selectedAction) return "";
+    return spot.options.find((o) => o.id === selectedAction)?.label || "";
+  }, [spot, selectedAction]);
+
+  const correctActionLabel = useMemo(() => {
+    if (!spot) return "";
+    return spot.options.find((o) => o.isCorrect)?.label || "";
+  }, [spot]);
+
   const handleReplay = () => {
     setSelectedAction(null);
     setShowResult(false);
+    setExplainState("hidden");
     resetTimeline();
     setTimeout(() => playTimeline(), 100);
   };
@@ -171,6 +193,36 @@ export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
   const handleActionSelect = (id: string) => {
     setSelectedAction(id);
     setShowResult(true);
+  };
+
+  // Explain handlers
+  const handleOpenExplain = () => {
+    setExplainState("sheet");
+    bottomSheetRef.current?.open();
+  };
+
+  const handleCloseSheet = () => {
+    setExplainState("hidden");
+  };
+
+  const handleAskQuestion = () => {
+    bottomSheetRef.current?.close();
+    
+    // Navigate to chat screen after sheet closes
+    setTimeout(() => {
+      setExplainState("chat");
+      if (spot && rawSpot) {
+        navigation.navigate("ExplanationChat", {
+          meta: rawSpot.meta,
+          tags: rawSpot.tags,
+          heroPosition: spot.heroPosition,
+          street: spot.streetName,
+          isCorrect: spot.options.find((o) => o.id === selectedAction)?.isCorrect ?? false,
+          selectedAction: selectedActionLabel,
+          correctAction: correctActionLabel,
+        });
+      }
+    }, 300);
   };
 
   // Loading state
@@ -268,13 +320,10 @@ export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           
           <View style={styles.resultButtons}>
-            {/* Explain button - PRO only */}
-            <Pressable style={styles.explainBtn}>
+            {/* Explain button - Now functional */}
+            <Pressable style={styles.explainBtn} onPress={handleOpenExplain}>
               <Text style={styles.explainIcon}>💡</Text>
               <Text style={styles.explainText}>Explain</Text>
-              <View style={styles.proBadge}>
-                <Text style={styles.proBadgeText}>PRO</Text>
-              </View>
             </Pressable>
             
             {/* Next button */}
@@ -290,6 +339,18 @@ export const AnimatedDrillScreen: React.FC<Props> = ({ navigation }) => {
         phase={timelineState.phase === "decision" && !showResult ? "ready" : "replay"}
         actions={showResult ? actionsWithEv : actions}
         onSelectAction={handleActionSelect}
+      />
+
+      {/* Explanation Bottom Sheet */}
+      <ExplanationSheet
+        ref={bottomSheetRef}
+        meta={rawSpot?.meta}
+        tags={rawSpot?.tags}
+        isCorrect={isCorrect ?? false}
+        selectedAction={selectedActionLabel}
+        correctAction={correctActionLabel}
+        onAskQuestion={handleAskQuestion}
+        onClose={handleCloseSheet}
       />
     </View>
   );
@@ -451,35 +512,21 @@ const styles = StyleSheet.create({
   explainBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
-    opacity: 0.6,
-    gap: 4,
+    gap: 6,
   },
   explainIcon: {
-    fontSize: 12,
+    fontSize: 14,
   },
   explainText: {
-    color: colors.textMuted,
-    fontSize: 12,
+    color: colors.textPrimary,
+    fontSize: 13,
     fontWeight: "600",
-  },
-  proBadge: {
-    marginLeft: 4,
-    backgroundColor: colors.gold,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  proBadgeText: {
-    color: "#000",
-    fontSize: 8,
-    fontWeight: "800",
-    letterSpacing: 0.5,
   },
   nextBtn: {
     paddingHorizontal: 18,

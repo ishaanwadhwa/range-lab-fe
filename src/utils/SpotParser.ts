@@ -17,6 +17,7 @@ import {
   Street,
   SizingRef,
   ActionCode,
+  SpotMeta,
 } from "../types/spot";
 
 // All positions in 6-max order
@@ -315,6 +316,9 @@ export function parseSpot(spot: SpotData): ProcessedSpot {
     villainsInHand: spot.v,
     options,
     history,
+    dealerPosition: "BTN" as Position, // BTN is always dealer in standard poker
+    meta: spot.meta,
+    tags: spot.tags,
   };
 }
 
