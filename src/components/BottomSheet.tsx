@@ -4,7 +4,7 @@
  * "Dark Confidence" design
  */
 
-import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import {
   View,
   Animated,
@@ -18,7 +18,7 @@ import {
 import { colors } from "../theme/colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SHEET_MAX_HEIGHT = SCREEN_HEIGHT * 0.85;
+const SHEET_MAX_HEIGHT = SCREEN_HEIGHT * 0.93;
 const SHEET_MIN_HEIGHT = SCREEN_HEIGHT * 0.5;
 
 export interface BottomSheetRef {
@@ -36,29 +36,52 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
   ({ children, onClose }, ref) => {
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
     const backdropOpacity = useRef(new Animated.Value(0)).current;
-    const isOpen = useRef(false);
+    const [isOpen, setIsOpen] = useState(false);
     const currentHeight = useRef(SHEET_MIN_HEIGHT);
 
-    // Pan responder for drag-to-dismiss
-    const panResponder = useRef(
+    const handlePanResponder = useRef(
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: (_, gestureState) => {
-          // Only respond to vertical swipes
-          return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+          return Math.abs(gestureState.dy) > 5;
         },
+        onStartShouldSetPanResponderCapture: () => false,
+        onMoveShouldSetPanResponderCapture: () => false,
         onPanResponderMove: (_, gestureState) => {
-          if (gestureState.dy > 0) {
-            // Only allow dragging down
-            translateY.setValue(SCREEN_HEIGHT - currentHeight.current + gestureState.dy);
+          const newTranslateY = SCREEN_HEIGHT - currentHeight.current + gestureState.dy;
+          const minY = SCREEN_HEIGHT - SHEET_MAX_HEIGHT;
+          const maxY = SCREEN_HEIGHT - SHEET_MIN_HEIGHT;
+
+          if (newTranslateY >= minY && newTranslateY <= maxY) {
+            translateY.setValue(newTranslateY);
+          } else if (newTranslateY < minY) {
+            const resistance = 0.3;
+            translateY.setValue(minY + (newTranslateY - minY) * resistance);
           }
         },
         onPanResponderRelease: (_, gestureState) => {
-          if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-            // Close if dragged down enough or fast enough
-            close();
+          const dragDistance = gestureState.dy;
+          const dragVelocity = gestureState.vy;
+
+          if (dragDistance > 100 || dragVelocity > 0.5) {
+            if (currentHeight.current === SHEET_MIN_HEIGHT) {
+              close();
+            } else {
+              currentHeight.current = SHEET_MIN_HEIGHT;
+              Animated.spring(translateY, {
+                toValue: SCREEN_HEIGHT - SHEET_MIN_HEIGHT,
+                useNativeDriver: true,
+                friction: 8,
+              }).start();
+            }
+          } else if (dragDistance < -50 || dragVelocity < -0.5) {
+            currentHeight.current = SHEET_MAX_HEIGHT;
+            Animated.spring(translateY, {
+              toValue: SCREEN_HEIGHT - SHEET_MAX_HEIGHT,
+              useNativeDriver: true,
+              friction: 8,
+            }).start();
           } else {
-            // Snap back
             Animated.spring(translateY, {
               toValue: SCREEN_HEIGHT - currentHeight.current,
               useNativeDriver: true,
@@ -70,7 +93,7 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
     ).current;
 
     const open = () => {
-      isOpen.current = true;
+      setIsOpen(true);
       currentHeight.current = SHEET_MIN_HEIGHT;
       Animated.parallel([
         Animated.spring(translateY, {
@@ -87,7 +110,6 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
     };
 
     const close = () => {
-      isOpen.current = false;
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: SCREEN_HEIGHT,
@@ -100,6 +122,7 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
           useNativeDriver: true,
         }),
       ]).start(() => {
+        setIsOpen(false);
         onClose?.();
       });
     };
@@ -109,8 +132,8 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
       const targetHeight = heights[index] || SHEET_MIN_HEIGHT;
       currentHeight.current = targetHeight;
 
-      if (!isOpen.current) {
-        isOpen.current = true;
+      if (!isOpen) {
+        setIsOpen(true);
         backdropOpacity.setValue(0);
         Animated.timing(backdropOpacity, {
           toValue: 1,
@@ -132,18 +155,14 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
       snapToIndex,
     }));
 
+    if (!isOpen) {
+      return null;
+    }
+
     return (
       <>
         {/* Backdrop */}
-        <Animated.View
-          style={[
-            styles.backdrop,
-            {
-              opacity: backdropOpacity,
-              pointerEvents: isOpen.current ? "auto" : "none",
-            },
-          ]}
-        >
+        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
           <TouchableWithoutFeedback onPress={close}>
             <View style={styles.backdropTouchable} />
           </TouchableWithoutFeedback>
@@ -160,7 +179,7 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
           ]}
         >
           {/* Handle */}
-          <View {...panResponder.panHandlers} style={styles.handleContainer}>
+          <View {...handlePanResponder.panHandlers} style={styles.handleContainer}>
             <View style={styles.handle} />
           </View>
 
@@ -168,8 +187,10 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(
           <ScrollView
             style={styles.content}
             contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
+            showsVerticalScrollIndicator={true}
+            bounces={true}
+            overScrollMode="never"
+            keyboardShouldPersistTaps="handled"
           >
             {children}
           </ScrollView>
@@ -197,7 +218,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     zIndex: 101,
-    // Shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.3,
@@ -214,11 +234,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     borderRadius: 2,
   },
+  contentWrapper: {
+    flex: 1,
+    overflow: "hidden",
+  },
   content: {
     flex: 1,
   },
   contentContainer: {
-    paddingBottom: Platform.OS === "ios" ? 34 : 20,
+    flexGrow: 1,
+    paddingBottom: Platform.OS === "ios" ? 50 : 30,
   },
 });
-
